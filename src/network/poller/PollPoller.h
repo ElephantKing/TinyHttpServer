@@ -28,6 +28,6 @@ private:
 };                                               
                                                  	
 
-}//tiny;
+}//namespace tiny;
 #endif
 

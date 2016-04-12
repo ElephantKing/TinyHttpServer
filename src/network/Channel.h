@@ -83,10 +83,11 @@ private:
 	int events_;
 	int revents_;
 	int index_;
-	int logHup_;
+	bool logHup_;
 
 	std::weak_ptr<void> tie_;
 	bool tied_;
+	bool eventHandling_;
 	bool addedToLoop_;
 	ReadEventCallback readCallback_;
 	EventCallback writeCallback_;

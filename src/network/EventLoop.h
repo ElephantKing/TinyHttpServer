@@ -90,7 +90,7 @@ private:
 	int64_t iteration_;
 	const pid_t threadId_;
 	Timestamp poolReturnTime_;
-	std::unique_ptr<Channel> wakeChannel_;
+	std::unique_ptr<Channel> wakeupChannel_;
 	boost::any context_;
 
 	ChannelList activeChannels_;
