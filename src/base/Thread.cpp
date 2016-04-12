@@ -52,10 +52,10 @@ struct ThreadData {
 	string name_;
 	weak_ptr<pid_t> wkTid_;
 
-	ThreadData(const ThreadFunc& func,
+	ThreadData(ThreadFunc&& func,
 			   const string& name,
 			   const shared_ptr<pid_t>& tid) 
-		: func_(func),
+		: func_(std::move(func)),
 		  name_(name),
 		  wkTid_(tid)  {  }
 
@@ -100,6 +100,7 @@ struct ThreadData {
 void *startThread(void *obj) {
 	ThreadData* data = static_cast<ThreadData*>(obj);
 	data->runInThread();
+	delete data;
 	return NULL;
 }
 
@@ -151,7 +152,7 @@ void Thread::setDefaultName() {
 void Thread::start() {
 	assert(!started_);
 	started_ = true;
-	CurrentThread::ThreadData *data = new CurrentThread::ThreadData(func_, name_, tid_);
+	CurrentThread::ThreadData *data = new CurrentThread::ThreadData(std::move(func_), name_, tid_); 
 	if (pthread_create(&pthreadId_, NULL, &CurrentThread::startThread, data)) {
 		started_ = false;
 		delete data;
