@@ -39,16 +39,18 @@ public:
 	void runInLoop(const Functor& callback);
 	void queueInLoop(const Functor& callback);
 
-	void runInLoop(const Functor&& callback);
-	void queueInLoop(const Functor&& callback);
+	void runInLoop(Functor&& callback);
+	void queueInLoop(Functor&& callback);
 
 	TimerId runAt(const Timestamp& time, const TimerCallback& callback);
-	TimerId runAfer(double delay, const TimerCallback& callback);
+	TimerId runAfter(double delay, const TimerCallback& callback);
 	TimerId runEvery(double interval, const TimerCallback& callback);
 
 	TimerId runAt(const Timestamp& time, const TimerCallback&& callback);
-	TimerId runAfer(double delay, const TimerCallback&& callback);
+	TimerId runAfter(double delay, const TimerCallback&& callback);
 	TimerId runEvery(double interval, const TimerCallback&& callback);
+
+	void cancel(TimerId timerId);
 
 	void wakeup();
 	void updateChannel(Channel* channel);
@@ -90,6 +92,10 @@ private:
 	int64_t iteration_;
 	const pid_t threadId_;
 	Timestamp poolReturnTime_;
+	std::unique_ptr<Poller> poller_;
+	std::unique_ptr<TimerQueue> timeQueue_;
+	int wakeupFd_;
+
 	std::unique_ptr<Channel> wakeupChannel_;
 	boost::any context_;
 
