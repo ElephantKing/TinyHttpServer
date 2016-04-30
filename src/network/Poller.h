@@ -1,5 +1,5 @@
-#ifndef _TINY_POLLER_H_
-#define _TINY_POLLER_H_
+#ifndef TINY_POLLER_H
+#define TINY_POLLER_H
 
 #include <map>
 #include <vector>

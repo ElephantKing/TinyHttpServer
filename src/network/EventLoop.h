@@ -89,11 +89,11 @@ private:
 	std::atomic<bool> eventHandling_;
 	std::atomic<bool> callingPendingFunctors_;
 
-	int64_t iteration_;
+	int64_t iteration_; //循环次数
 	const pid_t threadId_;
 	Timestamp poolReturnTime_;
 	std::unique_ptr<Poller> poller_;
-	std::unique_ptr<TimerQueue> timeQueue_;
+	std::unique_ptr<TimerQueue> timerQueue_;
 	int wakeupFd_;
 
 	std::unique_ptr<Channel> wakeupChannel_;

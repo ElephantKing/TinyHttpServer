@@ -2,6 +2,7 @@
 
 #include "../base/Mutex.h"
 #include "Channel.h"
+#include "TimerQueue.h"
 #include "Poller.h"
 #include "SocketsOps.h"
 
@@ -49,7 +50,7 @@ EventLoop::EventLoop()
 	  iteration_(0),
 	  threadId_(CurrentThread::tid()),
 	  poller_(Poller::newDefaultPoller(this)),
-	  TimerQueue(new TimerQueue(this)),
+	  timerQueue_(new TimerQueue(this)),
 	  wakeupFd_(createEventfd()),
 	  wakeupChannel_(new Channel(this, wakeupFd_)),
 	  currentActiveChannel_(NULL) 
@@ -222,6 +223,13 @@ void EventLoop::printActiveChannels() const {
 	{
 		const Channel* ch = *it; (void)ch;
 //		LOG_TRACE << "{" << ch->reventsToString() << "}";
+	}
+}
+
+void EventLoop::quit() {
+	quit_ = true;
+	if (!isInLoopThread()) {
+		wakeup();
 	}
 }
 

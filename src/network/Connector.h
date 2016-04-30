@@ -1,5 +1,5 @@
-#ifndef _TINY_CONNECTOR_H_
-#define _TINY_CONNECTOR_H_
+#ifndef TINY_CONNECTOR_H
+#define TINY_CONNECTOR_H
 
 #include "InetAddress.h"
 
@@ -28,3 +28,4 @@ private:
 
 }//namespace tiny
 #endif
+
