@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "../base/Timestamp.h"
-#include "EvenLoop.h"
+#include "EventLoop.h"
 
 namespace tiny {
 
@@ -25,7 +25,9 @@ public:
 
 	virtual void removeChannel(Channel* channel) = 0;
 
-	virtual bool hashChannel(Channel* channel) const;
+	virtual bool hasChannel(Channel* channel) const;
+
+	static Poller* newDefaultPoller(EventLoop *loop);
 
 	void assertInLoopThread() const {
 		ownerLoop_->assertInLoopThread();

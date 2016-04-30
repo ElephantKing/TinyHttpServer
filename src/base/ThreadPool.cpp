@@ -115,7 +115,7 @@ void ThreadPool::runInThread() {
 		while (running_) {
 			Task task(take());
 			if (task) {
-				task();
+				task(); //假如调用了stop，并且queue_为空，那么就会取到一个空的task,同时也可以让用户随便run
 			}
 		}
 	} catch(const Exception& ex) {

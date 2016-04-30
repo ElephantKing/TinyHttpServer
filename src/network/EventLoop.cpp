@@ -3,6 +3,7 @@
 #include "../base/Mutex.h"
 #include "Channel.h"
 #include "Poller.h"
+#include "SocketsOps.h"
 
 #include <functional>
 #include <signal.h>
@@ -47,8 +48,8 @@ EventLoop::EventLoop()
 	  callingPendingFunctors_(false),
 	  iteration_(0),
 	  threadId_(CurrentThread::tid()),
-//	  poller_(Poller::newDefaultPoller(this)),
-//	  TimerQueue(new TimerQueue(this)),
+	  poller_(Poller::newDefaultPoller(this)),
+	  TimerQueue(new TimerQueue(this)),
 	  wakeupFd_(createEventfd()),
 	  wakeupChannel_(new Channel(this, wakeupFd_)),
 	  currentActiveChannel_(NULL) 
@@ -104,7 +105,8 @@ void EventLoop::loop() {
 void EventLoop::runInLoop(const Functor& callback) {
 	if (isInLoopThread()) {
 		callback();
-	} else { queueInLoop(callback);
+	} else { 
+		queueInLoop(callback);
 	}
 }
 
@@ -172,10 +174,10 @@ void EventLoop::removeChannel(Channel *channel) {
 	poller_->removeChannel(channel);
 }
 
-bool EventLoop::hashChannel(Channel* channel) {
+bool EventLoop::hasChannel(Channel* channel) {
 	assert(channel->ownerLoop() == this);
 	assertInLoopThread();
-	return poller_->hashChannel(channel);
+	return poller_->hasChannel(channel);
 }
 
 void EventLoop::abortNotInLoopThread() {
@@ -185,19 +187,19 @@ void EventLoop::abortNotInLoopThread() {
 }
 
 void EventLoop::wakeup() {
-//	uint64_t one = 1;	
-//	ssize_t n = sockets::write(wakeupFd_, &one, sizeof(one));
-//	if (n != sizeof(one)) {
+	uint64_t one = 1;	
+	ssize_t n = sockets::write(wakeupFd_, &one, sizeof(one));
+	if (n != sizeof(one)) {
 //		LOG_ERROR << "EventLoop::wakeup() writes " << n << "bytes instead of 8";
-//	}
+	}
 }
 
 void EventLoop::handleRead() {
-//	uint64_t one = 1;
-//	ssize_t n = sockets::read(wakeup, &one, sizeof(one));
-//	if (n != sizeof (one)) {
-//		LOG_ERROR << "EventLoop::handleRead () reads " << n << " buytes instead of 8";
-//	}
+	uint64_t one = 1;
+	ssize_t n = sockets::read(wakeupFd_, &one, sizeof(one));
+	if (n != sizeof (one)) {
+//		LOG_ERROR << "EventLoop::handleRead () reads " << n << " bytes instead of 8";
+	}
 }
 
 void EventLoop::doPendingFunctors() {
@@ -218,7 +220,7 @@ void EventLoop::printActiveChannels() const {
 	for (ChannelList::const_iterator it = activeChannels_.begin();
 		 it != activeChannels_.end(); ++it) 
 	{
-//		const Channel* ch = *it;
+		const Channel* ch = *it; (void)ch;
 //		LOG_TRACE << "{" << ch->reventsToString() << "}";
 	}
 }
