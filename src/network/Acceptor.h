@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "Channel.h"
+#include "Socket.h"
 
 namespace tiny {
 

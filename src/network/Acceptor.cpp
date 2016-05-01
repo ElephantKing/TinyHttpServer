@@ -1,5 +1,6 @@
 #include "Acceptor.h"
-
+#include "InetAddress.h"
+#include "SocketsOps.h"
 #include "EventLoop.h"
 
 #include <functional>
@@ -39,7 +40,8 @@ void tiny::Acceptor::handleRead() {
 	loop_->assertInLoopThread();
 	InetAddress peerAddr;
 	//FIXME loop until no more
-	int connfd = acceptSocket_.accept(&peerAddr);
+	int connfd = 0;
+	connfd = acceptSocket_.accept(&peerAddr);
 	if (connfd >= 0) {
 		if (newConnectionCallback_) {
 			newConnectionCallback_(connfd, peerAddr);

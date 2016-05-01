@@ -35,7 +35,7 @@ public:
 	void setReuseAddr(bool on);
 
 	// SO_REUSEPORT
-	void serReusePort(bool on);
+	void setReusePort(bool on);
 
 	// SO_KEEPALIVE
 	void setKeepAlive(bool on);
