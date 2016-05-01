@@ -97,7 +97,7 @@ private:
 	void handleWrite();
 	void handleClose();
 	void handleError();
-	void sendInLoop(string&& message);
+//	void sendInLoop(string&& message);
 	void sendInLoop(const StringPiece& message);
 	void sendInLoop(const void* message, size_t len);
 	void shutdownInLoop();

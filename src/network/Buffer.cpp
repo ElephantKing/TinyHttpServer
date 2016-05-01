@@ -12,7 +12,7 @@ const size_t Buffer::kCheapPrepend;
 const size_t Buffer::kInitialSize;
 
 ssize_t Buffer::readFd(int fd, int* savedErrno) {
-	char extrabuf[65536];
+	char extrabuf[65536]; //FIX ME: _Thread_local
 	struct iovec vec[2];
 	const size_t writable = writableBytes();
 	vec[0].iov_base = begin() + writerIndex_;
