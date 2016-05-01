@@ -6,9 +6,11 @@
 #include <algorithm>
 #include <string>
 #include <type_traits>
+#include "MyString.h"
 
 
 namespace tiny {
+
 
 class StringArg {
 public:
@@ -16,7 +18,7 @@ public:
 		: str_(str)
 	{  }
 
-	StringArg(const std::string& str)
+	StringArg(const string& str)
 		: str_(str.c_str())
 	{  }
 
@@ -43,7 +45,7 @@ public:
 		  length_(static_cast<int>(strlen(ptr_)))
 	{  }
 
-	StringPiece(const std::string& str)
+	StringPiece(const string& str)
 		: ptr_(str.c_str()), length_(static_cast<int>(str.size()))
 	{  }
 
@@ -96,11 +98,11 @@ public:
 		return r;
 	}
 
-	std::string as_string() const {
-		return std::string(data(), size());
+	string as_string() const {
+		return string(data(), size());
 	}
 
-	void CopyToString(std::string* target) const {
+	void CopyToString(string* target) const {
 		target->assign(ptr_, length_);
 	}
 
