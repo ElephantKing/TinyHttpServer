@@ -7,6 +7,7 @@
 namespace tiny {
 namespace CurrentThread {
 
+/*FIXME: using c++11 thread_local keyword*/
 extern __thread int64_t t_cachedTid;
 extern __thread char t_tidString[64];
 extern __thread const char* t_threadName;
