@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <iosfwd>
+#include <algorithm>
 #include <string>
 #include <type_traits>
 
@@ -83,7 +84,32 @@ public:
 		return !operator==(x);
 	}
 
+	int compare(const StringPiece& x) const {
+		int r = memcmp(ptr_, x.ptr_, std::min(length_, x.length_));
+		if (r == 0) {
+			if (length_ < x.length_) {
+				r = -1;
+			} else if (length_ > x.length_) {
+				r = 1;
+			}
+		}
+		return r;
+	}
+
+	std::string as_string() const {
+		return std::string(data(), size());
+	}
+
+	void CopyToString(std::string* target) const {
+		target->assign(ptr_, length_);
+	}
+
+	bool starts_with(const StringPiece& x) const {
+		return (length_ >= x.length_) && (memcmp(ptr_, x.ptr_, x.length_) == 0);
+	}
 };
+
+std::ostream& operator<<(std::ostream& os, const StringPiece& piece);
 
 }//namespace tiny
 
