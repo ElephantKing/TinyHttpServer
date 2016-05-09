@@ -39,7 +39,7 @@ public:
 
 	void start();
 
-	void setThreadInitCallback(const ConnectionCallback& callback) {
+	void setConnectionCallback(const ConnectionCallback& callback) {
 		connectionCallback_ = callback;
 	}
 

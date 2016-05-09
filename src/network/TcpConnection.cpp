@@ -77,8 +77,8 @@ void TcpConnection::send(const StringPiece& message) {
 		} else {
 			loop_->runInLoop(
 			std::bind( 
-				[this, &message] () { 
-					this->sendInLoop(message.as_string()); 
+				[&] () { 
+					sendInLoop(message.as_string()); 
 				}
 			));
 		}
@@ -92,8 +92,8 @@ void TcpConnection::send(Buffer* buf) {
 		} else {
 			loop_->runInLoop(
 				std::bind(
-					[this, &buf] {
-						this->send(buf->retrieveAllAsString());
+					[&] {
+						send(buf->retrieveAllAsString());
 					}
 			));
 		}
@@ -120,8 +120,8 @@ void TcpConnection::sendInLoop(const void* data, size_t len) {
 			if (remaining == 0 && writeCompleteCallback_) {
 				loop_->queueInLoop(
 						std::bind(
-							[this] () {
-								(this->writeCompleteCallback_)(this->shared_from_this());
+							[&] () {
+								writeCompleteCallback_(shared_from_this());
 							}
 				));
 			}
@@ -163,8 +163,8 @@ void TcpConnection::shutdown() {
 		//FIXME: shared_from_this?
 		loop_->runInLoop(
 			std::bind(
-				[this]() {
-					this->shutdownInLoop();
+				[&]() {
+					shutdownInLoop();
 				}
 			)
 		);
@@ -183,11 +183,7 @@ void TcpConnection::forceClose() {
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		setState(kDisconnecting);
 		loop_->queueInLoop(
-			std::bind(
-				[this] () {
-					this->shared_from_this()->forceCloseInLoop();
-				}
-			)
+			std::bind(&TcpConnection::forceCloseInLoop, shared_from_this())
 		);
 	}
 }
