@@ -76,6 +76,10 @@ public:
 		highWaterMark_ = highWaterMark;
 	}
 
+	void setWriteCompleteCallback(const WriteCompleteCallback& callback) {
+		writeCompleteCallback_ = callback;
+	}
+
 	Buffer* inputBuffer() {
 		return &inputBuffer_;
 	}
