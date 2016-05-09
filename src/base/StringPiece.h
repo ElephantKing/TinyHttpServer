@@ -6,11 +6,11 @@
 #include <algorithm>
 #include <string>
 #include <type_traits>
-#include "MyString.h"
 
 
 namespace tiny {
 
+typedef std::string string;
 
 class StringArg {
 public:
@@ -22,6 +22,7 @@ public:
 		: str_(str.c_str())
 	{  }
 
+	const char* c_str() { return str_; }
 private:
 	const char* str_;
 };
