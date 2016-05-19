@@ -105,4 +105,5 @@ void PollPoller::removeChannel(Channel* channel) {
 		pollfds_.pop_back();
 	}
 }
-}
+}//namespace tiny
+
