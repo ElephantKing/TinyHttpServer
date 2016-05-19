@@ -54,7 +54,7 @@ struct ThreadData {
 
 	ThreadData(ThreadFunc&& func,
 			   const string& name,
-			   const shared_ptr<pid_t>& tid) 
+			   const std::shared_ptr<pid_t>& tid) 
 		: func_(std::move(func)),
 		  name_(name),
 		  wkTid_(tid)  {  }
@@ -64,16 +64,13 @@ struct ThreadData {
 		pid_t tid = 0;
 		tid = CurrentThread::tid();
 	
-		shared_ptr<pid_t> ptid = wkTid_.lock();
+		std::shared_ptr<pid_t> ptid = wkTid_.lock();
 		if (ptid) {
-			//回调，将Thread对象的tid 设置成当前线程的tid
-			//由于Thread对象可能已经被析构，使用weak_ptr
 			*ptid = tid;
 			ptid.reset();
 		}
 
 		CurrentThread::t_threadName = name_.empty() ? "nomarlThread" : name_.c_str();
-//		::prctl(PR_SET_NAME, CurrentThread::t_threadName);
 	
 		try {
 			func_();

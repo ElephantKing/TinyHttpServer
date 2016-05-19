@@ -1,5 +1,5 @@
-#ifndef _TINY_THREAD_H_
-#define _TINY_THREAD_H_
+#ifndef TINY_THREAD_H
+#define TINY_THREAD_H
 
 #include "CurrentThread.h"
 
@@ -14,9 +14,8 @@
 namespace tiny {
 
 using std::string;
-using std::shared_ptr;
-class Thread {
 
+class Thread {
 public:
 	typedef std::function<void()> ThreadFunc;
 
@@ -40,7 +39,7 @@ private:
 	bool started_;
 	bool joined_;
 	pthread_t pthreadId_;
-	shared_ptr<pid_t> tid_;
+	std::shared_ptr<pid_t> tid_;
 	ThreadFunc func_;
 	string name_;
 

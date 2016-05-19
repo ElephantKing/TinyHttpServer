@@ -101,7 +101,7 @@ private:
 	void handleWrite();
 	void handleClose();
 	void handleError();
-//	void sendInLoop(string&& message);
+	void sendInLoop(string&& message);
 	void sendInLoop(const StringPiece& message);
 	void sendInLoop(const void* message, size_t len);
 	void shutdownInLoop();
@@ -125,7 +125,7 @@ private:
 	CloseCallback closeCallback_;
 	size_t highWaterMark_;
 	Buffer inputBuffer_;
-	Buffer outputBuffer_; //FIXME use list<Buffer> as output buffer???
+	Buffer outputBuffer_;
 	boost::any context_;
 	bool reading_;
 	// FIXME creationTime_, lastReceiveTime_, butesReceived_, bytesSent_

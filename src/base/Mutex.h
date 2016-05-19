@@ -15,7 +15,7 @@ public:
 	}
 
 	~MutexLock() { 
-		assert(holder_ = 0);
+		assert(holder_ == 0);
 		pthread_mutex_destroy(&mutex_); 
 	}
 
