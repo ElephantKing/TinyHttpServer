@@ -69,6 +69,8 @@ private:
 	int nextConnId_;
 	ConnectionMap connections_;
 };
+
+
 }//namespace tiny
 #endif
 

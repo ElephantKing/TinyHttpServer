@@ -40,6 +40,11 @@ TcpServer::~TcpServer() {
 	}
 }
 
+void TcpServer::setThreadNum(int numThreads) {
+	assert(0 <= numThreads);
+	threadPool_->setThreadNum(numThreads);
+}
+
 void TcpServer::start() {
 	if (!started_) {
 		threadPool_->start(threadInitCallback_);
@@ -95,4 +100,4 @@ void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn) {
 			std::bind(&TcpConnection::connectDestroyed, conn));
 }
 
-}//namspace tiny
+}//namspace tine
