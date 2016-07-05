@@ -10,8 +10,8 @@ class TimerId;
 class TimerQueue {
 
 public:
-	TimerQueue(EventLoop *loop);
-	~TimerQueue();
+	TimerQueue(EventLoop *) {};
+	~TimerQueue() {};
 	TimerQueue(const TimerQueue&) = delete;
 };
 

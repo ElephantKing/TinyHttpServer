@@ -13,17 +13,17 @@ namespace CurrentThread {
 
 using std::weak_ptr;
 
-__thread int64_t t_cachedTid = 0;
+thread_local pthread_t t_cachedTid = 0;
 
-__thread char t_tidString[64];
+thread_local char t_tidString[64];
 
-__thread const char* t_threadName = "unknown";
+thread_local const char* t_threadName = "unknown";
 
 void cacheTid() {
 	if (t_cachedTid == 0) {
 		/// 这里使用pthread_self, 在mac os 下这只能保证同一个进程下的不同线程
 		/// 的tid 不同，在Linux下使用gettid这个调度id作为tid更好
-		t_cachedTid = reinterpret_cast<int64_t>(pthread_self());
+		t_cachedTid = ::pthread_self();
 	}
 }
 
@@ -40,7 +40,7 @@ public:
 		mainThreadId = CurrentThread::tid(); // 记录mainThread 的tid
 		pthread_atfork(NULL, NULL, &afterFork);
 	}
-	int64_t mainThreadId;
+	pthread_t mainThreadId;
 };
 
 
@@ -50,21 +50,21 @@ struct ThreadData {
 	typedef tiny::Thread::ThreadFunc ThreadFunc;
 	ThreadFunc func_;
 	string name_;
-	weak_ptr<pid_t> wkTid_;
+	weak_ptr<pthread_t> wkTid_;
 
 	ThreadData(ThreadFunc&& func,
 			   const string& name,
-			   const std::shared_ptr<pid_t>& tid) 
+			   const std::shared_ptr<pthread_t>& tid) 
 		: func_(std::move(func)),
 		  name_(name),
 		  wkTid_(tid)  {  }
 
 
 	void runInThread() {
-		pid_t tid = 0;
+		pthread_t tid = 0;
 		tid = CurrentThread::tid();
 	
-		std::shared_ptr<pid_t> ptid = wkTid_.lock();
+		std::shared_ptr<pthread_t> ptid = wkTid_.lock();
 		if (ptid) {
 			*ptid = tid;
 			ptid.reset();
@@ -102,7 +102,7 @@ void *startThread(void *obj) {
 }
 
 bool isMainThread() {
-	return tid() == init.mainThreadId;
+	return ::pthread_equal(tid(), init.mainThreadId);
 }
 
 }// namespace CurrentThread
@@ -113,7 +113,7 @@ Thread::Thread(const ThreadFunc& func, const string& n)
 	: started_(false),
 	  joined_(false),
 	  pthreadId_(0),
-	  tid_(new pid_t(0)),
+	  tid_(new pthread_t(0)),
 	  func_(func),
 	  name_(n)
 {
@@ -124,7 +124,7 @@ Thread::Thread(const ThreadFunc&& func, const string& n)
 	: started_(false),
 	  joined_(false),
 	  pthreadId_(0),
-	  tid_(new pid_t(0)),
+	  tid_(new pthread_t(0)),
 	  func_(func),
 	  name_(n)
 {

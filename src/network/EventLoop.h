@@ -90,7 +90,7 @@ private:
 	std::atomic<bool> callingPendingFunctors_;
 
 	int64_t iteration_; //循环次数
-	const pid_t threadId_;
+	const pthread_t threadId_;
 	Timestamp poolReturnTime_;
 	std::unique_ptr<Poller> poller_;
 	std::unique_ptr<TimerQueue> timerQueue_;

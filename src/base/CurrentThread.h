@@ -3,18 +3,18 @@
 
 #include <cstdint>
 #include <unistd.h>
+#include <pthread.h>
 
 namespace tiny {
 namespace CurrentThread {
 
-/*FIXME: using c++11 thread_local keyword*/
-extern __thread int64_t t_cachedTid;
-extern __thread char t_tidString[64];
-extern __thread const char* t_threadName;
+extern thread_local pthread_t t_cachedTid;
+extern thread_local char t_tidString[64];
+extern thread_local const char* t_threadName;
 
 void cacheTid();
 
-inline pid_t tid() {
+inline pthread_t tid() {
 	if(t_cachedTid == 0) {
 		cacheTid();
 	}
@@ -23,8 +23,8 @@ inline pid_t tid() {
 
 bool isMainThread();
 
-}
-}
+}//namespace CurrentThread
+}//namespace tiny
 
 #endif
 

@@ -39,7 +39,7 @@ private:
 	bool started_;
 	bool joined_;
 	pthread_t pthreadId_;
-	std::shared_ptr<pid_t> tid_;
+	std::shared_ptr<pthread_t> tid_;
 	ThreadFunc func_;
 	string name_;
 

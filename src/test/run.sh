@@ -3,6 +3,7 @@ g++-5 -I../network -I../base -I/usr/local/Cellar/boost/1.60.0_1/include \
 	../base/Exception.cpp \
 	../base/ThreadPool.cpp \
 	../network/EventLoop.cpp \
+	../network/Channel.cpp \
 	EventLoopTest.cpp \
 	-g -std=c++11 -o test;
 #./test

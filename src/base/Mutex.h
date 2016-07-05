@@ -69,7 +69,7 @@ private:
 		MutexLock& owner_;
 	};
 
-	int64_t holder_;
+	pthread_t holder_;
 	pthread_mutex_t mutex_;
 };
 
