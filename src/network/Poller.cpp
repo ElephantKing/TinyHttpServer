@@ -18,4 +18,5 @@ bool Poller::hasChannel(Channel* channel) const {
 	return it != channels_.end() && it->second == channel;
 }
 
+
 } // namespace tiny

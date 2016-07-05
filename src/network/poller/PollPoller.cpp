@@ -43,7 +43,7 @@ void PollPoller::fillActiveChannels(int numEvents,
 		if (pfd->revents > 0) {
 			--numEvents;
 			ChannelMap::const_iterator ch = channels_.find(pfd->fd);
-			assert(ch != channels.end());
+			assert(ch != channels_.end());
 			Channel* channel = ch->second;
 			assert(channel->fd() == pfd->fd);
 			channel->set_revents(pfd->revents);
@@ -57,7 +57,7 @@ void PollPoller::updateChannel(Channel * channel) {
 	//LOG_TRACE << "fd = " << channel->fd() << "events = " << channel->events();
 	if (channel->index() < 0) {
 		// a new one, add to pollfds_
-		assert(channels.find(channel->fd()) == channels_.end());
+		assert(channels_.find(channel->fd()) == channels_.end());
 		struct pollfd pfd;
 		pfd.fd = channel->fd();
 		pfd.events = static_cast<short>(channel->events());
@@ -90,7 +90,7 @@ void PollPoller::removeChannel(Channel* channel) {
 	int idx = channel->index();
 	assert(0 <= idx && idx < static_cast<int>(pollfds_.size()));
 	const struct pollfd& pfd = pollfds_[idx]; (void)pfd;
-	assert(pfd.fd == -channel->fd() - 1 && pfd.evnets == channel->events());
+	assert(pfd.fd == -channel->fd() - 1 && pfd.events == channel->events());
 	size_t n = channels_.erase(channel->fd());
 	assert(n == 1); (void)n;
 	if (static_cast<size_t>(idx) == pollfds_.size() - 1) {
@@ -105,5 +105,8 @@ void PollPoller::removeChannel(Channel* channel) {
 		pollfds_.pop_back();
 	}
 }
+
+
+
 }//namespace tiny
 

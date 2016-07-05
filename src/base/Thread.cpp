@@ -27,10 +27,10 @@ void cacheTid() {
 	}
 }
 
-void afterFork() {
-	CurrentThread::t_cachedTid = 0;
-	CurrentThread::t_threadName = "main";
-}
+//void afterFork() {
+//	CurrentThread::t_cachedTid = 0;
+//	CurrentThread::t_threadName = "main";
+//}
 
 class ThreadNameInitializer {
 public:	
@@ -38,7 +38,7 @@ public:
 		// 这里的代码只会在main函数之前调用一次
 		t_threadName = "main";
 		mainThreadId = CurrentThread::tid(); // 记录mainThread 的tid
-		pthread_atfork(NULL, NULL, &afterFork);
+//		pthread_atfork(NULL, NULL, &afterFork);
 	}
 	pthread_t mainThreadId;
 };

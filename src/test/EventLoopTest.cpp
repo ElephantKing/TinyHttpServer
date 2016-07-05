@@ -20,8 +20,8 @@ void static sleep_1(unsigned int msecs)
 }
 
 int main() {
-
 	cout << CurrentThread::t_threadName << endl;
+	fork();
 	EventLoop loop;
 	std::function<void()> checkNotInMainThread = [] () { assert(!CurrentThread::isMainThread()); };
 	std::function<void()> checkInMainThread = [] () { assert(CurrentThread::isMainThread()); };
