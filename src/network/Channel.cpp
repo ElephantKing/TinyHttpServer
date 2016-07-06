@@ -1,4 +1,5 @@
 #include "Channel.h"
+
 #include "EventLoop.h"
 
 #include <sstream>
@@ -55,13 +56,18 @@ void Channel::handleEvent(Timestamp receiveTime) {
 		if (guard) {
 			handleEventWithGuard(receiveTime);
 		}
+	} else {
+		handleEventWithGuard(receiveTime);
 	}
 }
 
 void Channel::handleEventWithGuard(Timestamp receiveTime) {
 	eventHandling_ = true;
 	//LOG_TRACE << reventsToString();
+	
+	fprintf(stderr, "eventHanding\n");
 	if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
+		fprintf(stderr, "handing close event\n");
 		if (logHup_) {
 			//LOG_WARN << "fd = " << fd_ << " Channel::handle_event() POLLHUP";
 		}
@@ -84,6 +90,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
 		if (writeCallback_) writeCallback_();
 	}
 	eventHandling_ = false;
+	fprintf(stderr, "eventHanding finish\n");
 }
 
 string Channel::reventsToString() const {

@@ -23,6 +23,8 @@ inline pthread_t tid() {
 
 bool isMainThread();
 
+void sleepMsec(size_t msec);
+
 }//namespace CurrentThread
 }//namespace tiny
 

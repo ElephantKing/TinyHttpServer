@@ -11,30 +11,36 @@
 using namespace std;
 using namespace tiny;
 
-void static sleep_1(unsigned int msecs)
-{
-  struct timeval tval;
-  tval.tv_sec=msecs/1000;
-  tval.tv_usec=(msecs*1000)%1000000;
-  select(0,NULL,NULL,NULL,&tval);
+namespace {
+
+MutexLock globalMutex;
+
+void printThreadInfo() {
+	MutexLockGuard lock(globalMutex);	
+	fprintf(stderr, "Thread[%d:%ld]", ::getpid(), reinterpret_cast<intptr_t>(CurrentThread::tid()));
+}
+
 }
 
 int main() {
-	cout << CurrentThread::t_threadName << endl;
+	assert(CurrentThread::isMainThread());
+	printThreadInfo();	
 	fork();
 	EventLoop loop;
-	std::function<void()> checkNotInMainThread = [] () { assert(!CurrentThread::isMainThread()); };
-	std::function<void()> checkInMainThread = [] () { assert(CurrentThread::isMainThread()); };
+	std::function<void()> checkNotInMainThread = [] () { printThreadInfo(); assert(!CurrentThread::isMainThread()); };
+	std::function<void()> checkInMainThread = [] () {printThreadInfo(); assert(CurrentThread::isMainThread()); };
 	std::function<void()> runInThread = [&] () { 
 		checkNotInMainThread();
 		for (int i = 0; i < 10; ++i) {
 			loop.runInLoop(checkInMainThread);
-			sleep_1(500);
 		}
+		CurrentThread::sleepMsec(5 * 1000);
+		loop.runInLoop([&](){loop.quit();});
 	};
 	Thread childThread(runInThread, "childThread");
-	loop.loop();
 	childThread.start();
+	fprintf(stderr, "loop start\n");
+	loop.loop();
 	childThread.join();
 	return 0;
 }

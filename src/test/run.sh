@@ -9,14 +9,15 @@ g++-5 -I../network -I../base -I/usr/local/Cellar/boost/1.60.0_1/include \
 	../network/poller/DefaultPoller.cpp \
 	../network/poller/PollPoller.cpp \
 	../base/Timestamp.cpp \
-	EventLoopTest.cpp \
+	ChannelAndPollerTest.cpp \
 	-g -std=c++11 -o test;
 #./test
 
 #	../network/Socket.cpp\
 #	../network/Channel.cpp \
 
+#ThreadPoolAndSync.cpp \
+#EventLoopTest.cpp \
 #ThreadAndCondition.cpp \
 #ThreadAndSync.cpp
-#ThreadPoolAndSync.cpp \
 #ThreadPoolAndCondition.cpp \
