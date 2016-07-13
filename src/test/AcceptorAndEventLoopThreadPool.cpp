@@ -4,6 +4,9 @@
 #include "Condition.h"
 #include "EventLoop.h"
 #include "Channel.h"
+#include "Acceptor.h"
+#include "InetAddress.h"
+#include "EventLoopThread.h"
 #include <iostream>
 #include <string>
 #include <cassert>
@@ -16,38 +19,13 @@
 
 
 using namespace std;
+using namespace std::placeholders;
 using namespace tiny;
 
 namespace {
 
 int const kPort = 9527;
 map<int, Channel*> connMap; //保存Channel*，用于结束时释放内存
-
-int getListenFd(int port) {
-	//监听地址
-	sockaddr_in host;
-	memset(&host, 0, sizeof(host));
-	host.sin_family = AF_INET;
-	host.sin_port = htons(port);
-	host.sin_addr.s_addr = htonl(INADDR_ANY);
-	
-	int listenFd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	assert(listenFd>= 0);	
-	
-	if(::bind(listenFd, (struct sockaddr *)&host, sizeof(host)))
-    {
-		fprintf(stderr, "bind error: %d\n", errno);
-		return -1;
-    }
-    if(::listen(listenFd, SOMAXCONN))
-    {
-
-		fprintf(stderr, "listen error: %d\n", errno);
-        return -1;
-    }
-
-	return listenFd;
-}
 
 void newConnectionCallback(EventLoop* loop, int listenFd) {
 	loop->assertInLoopThread();
@@ -79,22 +57,16 @@ void newConnectionCallback(EventLoop* loop, int listenFd) {
 			loop->assertInLoopThread();
 			fprintf(stderr, "[%s:%d] disconnected\n" ,
 				inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+			::close(connChannel->fd());
 		}
 	}));
 	
 	connChannel->setCloseCallback(std::bind([=]() {
 		loop->assertInLoopThread();
-		fprintf(stderr, "[%s:%d] clear\n" ,
-			inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-
-		loop->assertInLoopThread();
 		connChannel->disableAll();
 		connChannel->remove();
-		loop->queueInLoop([loop, connFd] () {
-			delete connMap[connFd];
-		});
+		delete connMap[connFd];
 		connMap.erase(connFd);
-		::close(connFd);
 	}));
 
 	connChannel->enableReading();
@@ -120,46 +92,31 @@ void connectAndWrite() {
 	}
 	const char * buf = "hello, asshole";
 	::write(connFd, buf, sizeof(buf));
-	::close(connFd);
+	close(connFd);
 }
 
 }//unnamed namespace
 
 int main() {
-	EventLoop* loop;
-	std::function<void()> runInLoopThread = [&] () {
-		EventLoop loopInChildThread;
-		loop = &loopInChildThread;
-		loopInChildThread.loop();
-	};
-	Thread thread(runInLoopThread, "loopThread");
-	thread.start();
-	CurrentThread::sleepMsec(2000); //waiting for loop start, should use condition replace sleep
+	//保证 EventLoop 最后一个析构
+	EventLoopThread eventLoopThread;
+	EventLoop* loop = eventLoopThread.startLoop();
 	loop->runInLoop(std::bind([]() { assert(!CurrentThread::isMainThread()); }));
 	assert(CurrentThread::isMainThread);
 
-	auto listenFd = getListenFd(kPort);
-	std::function<void(Timestamp)> onNewConnection = std::bind(newConnectionCallback, loop, listenFd);
-
-	Channel* listenChannel_ptr = new Channel(loop, listenFd);
-	Channel& listenChannel = *listenChannel_ptr;
-	listenChannel.setReadCallback(onNewConnection);
-	listenChannel.enableReading();
+	auto listenAddress = InetAddress(kPort);
+	Acceptor acceptor(loop, listenAddress, false);
+	acceptor.setNewConnectionCallback(std::bind(newConnectionCallback, loop, _1));
+	loop->runInLoop([&]() {
+		acceptor.listen();
+	});
 	
 	ThreadPool clientThread("clientThread");
 	clientThread.setMaxQueueSize(100);
-	clientThread.start(2);
-	for (int i = 0; i < 4; ++i) {
+	clientThread.start(10);
+	for (int i = 0; i < 20; ++i) {
 		clientThread.run(connectAndWrite);
 	}
-	
-	fprintf(stderr, "work dipatch completed, sleeping and wait...\n");
-	CurrentThread::sleepMsec(1000 * 1000);
-	listenChannel.disableAll();
-	listenChannel.remove();
-	delete listenChannel_ptr;
-	loop->quit();
-	thread.join();
-	clientThread.stop();
+	connectAndWrite();
 	return 0;
 }

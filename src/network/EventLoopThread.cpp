@@ -23,7 +23,7 @@ EventLoopThread::~EventLoopThread() {
 }
 
 EventLoop* EventLoopThread::startLoop() {
-	assert(!thread_.started_());
+	assert(!thread_.started());
 	thread_.start();
 
 	{

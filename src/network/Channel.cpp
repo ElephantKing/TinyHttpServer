@@ -65,9 +65,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
 	eventHandling_ = true;
 	//LOG_TRACE << reventsToString();
 	
-	fprintf(stderr, "eventHanding\n");
-	if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
-		fprintf(stderr, "handing close event\n");
+	if ((revents_ & POLLHUP)  & !(revents_ & POLLIN)) {
 		if (logHup_) {
 			//LOG_WARN << "fd = " << fd_ << " Channel::handle_event() POLLHUP";
 		}
@@ -82,7 +80,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
 		if (errorCallback_) errorCallback_();
 	}
 
-	if (revents_ & (POLLIN | POLLPRI /* | POLLRDHUP*/)) {
+	if (revents_ & (POLLIN | POLLPRI) ) {
 		if (readCallback_) readCallback_(receiveTime);
 	}
 
@@ -90,7 +88,6 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
 		if (writeCallback_) writeCallback_();
 	}
 	eventHandling_ = false;
-	fprintf(stderr, "eventHanding finish\n");
 }
 
 string Channel::reventsToString() const {
