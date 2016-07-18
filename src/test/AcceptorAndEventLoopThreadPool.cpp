@@ -102,7 +102,7 @@ int main() {
 	EventLoopThread eventLoopThread;
 	EventLoop* loop = eventLoopThread.startLoop();
 	loop->runInLoop(std::bind([]() { assert(!CurrentThread::isMainThread()); }));
-	assert(CurrentThread::isMainThread);
+	assert(CurrentThread::isMainThread());
 
 	auto listenAddress = InetAddress(kPort);
 	Acceptor acceptor(loop, listenAddress, false);

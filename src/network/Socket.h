@@ -17,8 +17,6 @@ public:
 
 	~Socket();
 	int fd() { return sockfd_; }
-	bool getTcpInfo(struct tcp_info*) const;
-	bool getTcpInfoString(char *buf, int len) const;
 
 	void bindAddress(const InetAddress& localaddr);
 

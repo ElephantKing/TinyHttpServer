@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 namespace {
-	typedef struct sockaddr SA;
+typedef struct sockaddr SA;
 
 void setNonBlockAndCloseOnExec(int sockfd) {
 	int flags = ::fcntl(sockfd, F_GETFL, 0);
@@ -35,6 +35,15 @@ const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr) {
 
 struct sockaddr* sockaddr_cast(struct sockaddr_in6* addr) {
 	return static_cast<struct sockaddr*>(static_cast<void*>(addr));
+}
+
+
+void shutdownWrite(int sockfd)
+{
+  if (::shutdown(sockfd, SHUT_WR) < 0)
+  {
+//    LOG_SYSERR << "sockets::shutdownWrite";
+  }
 }
 
 const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr) {
@@ -159,6 +168,17 @@ void fromIpPort(const char* ip, uint16_t port,
 	if (::inet_pton(AF_INET, ip, &addr->sin_addr) <= 0) {
 //		LOG_SYSERR << "sockets::fromIpPort";
 	}
+}
+
+void fromIpPort(const char* ip, uint16_t port,
+                         struct sockaddr_in6* addr)
+{
+  addr->sin6_family = AF_INET6;
+  addr->sin6_port = hostToNetwork(port);
+  if (::inet_pton(AF_INET6, ip, &addr->sin6_addr) <= 0)
+  {
+    //LOG_SYSERR << "sockets::fromIpPort";
+  }
 }
 
 int getSocketError(int sockfd) {
