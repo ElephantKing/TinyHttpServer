@@ -67,22 +67,7 @@ void newConnectionCallback(EventLoop* loop, int listenFd) {
 	
 	Channel* connChannel = new Channel(loop, connFd);
 	connMap[connFd] = connChannel;
-	
-	connChannel->setReadCallback(std::bind([=]() {
-		loop->assertInLoopThread();
-		char buff[2048];
-		int n = ::read(connFd, buff, 2048);
-		if (n != 0) {
-			fprintf(stderr, "received %d bytes from [%s:%d]\n", 
-				n, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-		} else {
-			loop->assertInLoopThread();
-			fprintf(stderr, "[%s:%d] disconnected\n" ,
-				inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-		}
-	}));
-	
-	connChannel->setCloseCallback(std::bind([=]() {
+	std::function<void()> closeCallback = std::bind([=](){
 		loop->assertInLoopThread();
 		fprintf(stderr, "[%s:%d] clear\n" ,
 			inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
@@ -95,7 +80,29 @@ void newConnectionCallback(EventLoop* loop, int listenFd) {
 		});
 		connMap.erase(connFd);
 		::close(connFd);
+
+	});
+	
+	connChannel->setReadCallback(std::bind([=]() {
+		loop->assertInLoopThread();
+		char buff[2048];
+		int n = ::read(connFd, buff, 2048);
+		if (n != 0) {
+			fprintf(stderr, "received %d bytes from [%s:%d]\n", 
+				n, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+		} else {
+		//socket为阻塞socket，读到0时已经为半关闭
+		//直接closeCallback（），不再等到下次poll，因为可能半关闭也会
+		//一直被判定为可读
+			loop->assertInLoopThread();
+			fprintf(stderr, "[%s:%d] disconnected\n" ,
+				inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+			closeCallback();
+		}
 	}));
+	
+	//poller保证执行CloseCallback时是安全的
+	connChannel->setCloseCallback(closeCallback);
 
 	connChannel->enableReading();
 }
@@ -136,7 +143,7 @@ int main() {
 	thread.start();
 	CurrentThread::sleepMsec(2000); //waiting for loop start, should use condition replace sleep
 	loop->runInLoop(std::bind([]() { assert(!CurrentThread::isMainThread()); }));
-	assert(CurrentThread::isMainThread);
+	assert(CurrentThread::isMainThread());
 
 	auto listenFd = getListenFd(kPort);
 	std::function<void(Timestamp)> onNewConnection = std::bind(newConnectionCallback, loop, listenFd);
