@@ -2,6 +2,7 @@
 #define _TINY_EVENTLOOP_H_
 
 #include <vector>
+#include <iostream>
 #include <functional>
 #include <memory>
 #include <boost/any.hpp>
@@ -61,9 +62,12 @@ public:
 		if (!isInLoopThread()) {
 			abortNotInLoopThread();
 		}
+		assert(isInLoopThread());
 	}
 
-	bool isInLoopThread() const { return threadId_ == CurrentThread::tid(); }
+	bool isInLoopThread() const {  
+		return threadId_ == CurrentThread::tid();
+	}
 	
 	bool eventHandling() const { return eventHandling_; }
 

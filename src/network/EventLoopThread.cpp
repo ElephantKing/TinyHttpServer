@@ -25,14 +25,13 @@ EventLoopThread::~EventLoopThread() {
 EventLoop* EventLoopThread::startLoop() {
 	assert(!thread_.started());
 	thread_.start();
-
 	{
 		MutexLockGuard lock(mutex_);
 		while (loop_ == nullptr) {
 			cond_.wait();
 		}
 	}
-	
+
 	return loop_;
 }
 

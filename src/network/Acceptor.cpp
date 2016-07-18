@@ -24,7 +24,7 @@ tiny::Acceptor::Acceptor(EventLoop* loop, const InetAddress& listenAddr, bool re
 }
 
 tiny::Acceptor::~Acceptor() {
-	acceptChannel_.disableAll(); //为什么不能直接remove
+	acceptChannel_.disableAll(); 
 	acceptChannel_.remove();
 	::close(idleFd_);
 }

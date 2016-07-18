@@ -27,47 +27,38 @@ namespace {
 int const kPort = 9527;
 map<int, Channel*> connMap; //保存Channel*，用于结束时释放内存
 
-void newConnectionCallback(EventLoop* loop, int listenFd) {
+void newConnectionCallback(EventLoop* loop, int connFd, InetAddress peerAddr) {
 	loop->assertInLoopThread();
-	struct sockaddr_in client_addr;
-	socklen_t length = sizeof(client_addr);
-    int connFd = accept(listenFd, (struct sockaddr*)&client_addr, &length);
-    if (connFd < 0)
-    {
-		loop->runInLoop(std::bind([]() {
-			fprintf(stderr, "bind error: %d\n", errno);
-		}));
-		return ;
-	} else {
-		fprintf(stderr, "[%s:%d] connected\n", 
-			inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-	}
-	
 	Channel* connChannel = new Channel(loop, connFd);
 	connMap[connFd] = connChannel;
 	
+	std::function<void()> closeCallback = std::bind([=](){
+		loop->assertInLoopThread();
+		connChannel->disableAll();
+		connChannel->remove();
+		loop->queueInLoop([=](){
+			delete connMap[connFd];
+		});
+		connMap.erase(connFd);
+		::close(connChannel->fd());
+	});
+
 	connChannel->setReadCallback(std::bind([=]() {
 		loop->assertInLoopThread();
 		char buff[2048];
 		int n = ::read(connFd, buff, 2048);
 		if (n != 0) {
 			fprintf(stderr, "received %d bytes from [%s:%d]\n", 
-				n, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+				n, peerAddr.toIp().c_str(), peerAddr.toPort());
 		} else {
 			loop->assertInLoopThread();
 			fprintf(stderr, "[%s:%d] disconnected\n" ,
-				inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-			::close(connChannel->fd());
+				peerAddr.toIp().c_str(), peerAddr.toPort());
+			closeCallback();
 		}
 	}));
 	
-	connChannel->setCloseCallback(std::bind([=]() {
-		loop->assertInLoopThread();
-		connChannel->disableAll();
-		connChannel->remove();
-		delete connMap[connFd];
-		connMap.erase(connFd);
-	}));
+	connChannel->setCloseCallback(closeCallback);
 
 	connChannel->enableReading();
 }
@@ -85,14 +76,14 @@ void connectAndWrite() {
 	host.sin_port = htons(kPort);
 	host.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	
-	if(-1 == connect(connFd,(struct sockaddr *)(&host), sizeof(struct sockaddr)))  
+	if(connect(connFd,(struct sockaddr *)(&host), sizeof(struct sockaddr)) < 0)  
 	{  
-		fprintf(stderr, "connect fail !\r\n");  
+		fprintf(stderr, "connect fail! err:%d %s\n", errno, strerror(errno));  
 		return;  
 	}
 	const char * buf = "hello, asshole";
 	::write(connFd, buf, sizeof(buf));
-	close(connFd);
+	::close(connFd);
 }
 
 }//unnamed namespace
@@ -101,22 +92,35 @@ int main() {
 	//保证 EventLoop 最后一个析构
 	EventLoopThread eventLoopThread;
 	EventLoop* loop = eventLoopThread.startLoop();
-	loop->runInLoop(std::bind([]() { assert(!CurrentThread::isMainThread()); }));
+	loop->runInLoop(std::bind([]() { 
+				assert(!CurrentThread::isMainThread()); 
+				fprintf(stderr, "loop started\n");
+	}));
 	assert(CurrentThread::isMainThread());
 
 	auto listenAddress = InetAddress(kPort);
-	Acceptor acceptor(loop, listenAddress, false);
-	acceptor.setNewConnectionCallback(std::bind(newConnectionCallback, loop, _1));
+	Acceptor *acceptor_ptr = new Acceptor(loop, listenAddress, false);
+	Acceptor& acceptor = *acceptor_ptr;
+	acceptor.setNewConnectionCallback(std::bind(newConnectionCallback, loop, _1, _2));
 	loop->runInLoop([&]() {
 		acceptor.listen();
 	});
 	
 	ThreadPool clientThread("clientThread");
+	//等待listen开始。。
+	CurrentThread::sleepMsec(20 * 1000);
+	fprintf(stderr, "start write\n");
 	clientThread.setMaxQueueSize(100);
-	clientThread.start(10);
-	for (int i = 0; i < 20; ++i) {
+	clientThread.start(1);
+	for (int i = 0; i < 10; ++i) {
 		clientThread.run(connectAndWrite);
 	}
 	connectAndWrite();
+	//等待connectAndWrite结束
+	fprintf(stderr, "wait to close.....\n");
+	CurrentThread::sleepMsec(200 * 1000);
+	loop->runInLoop([=]() {
+		delete acceptor_ptr;
+	});
 	return 0;
 }

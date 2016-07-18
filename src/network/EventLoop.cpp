@@ -1,6 +1,7 @@
 #include "EventLoop.h"
 
 #include "../base/Mutex.h"
+#include <iostream>
 #include "Channel.h"
 #include "TimerQueue.h"
 #include "Poller.h"
@@ -12,7 +13,7 @@
 
 namespace {
 
-__thread tiny::EventLoop* t_loopInThisThread = 0;
+thread_local tiny::EventLoop* t_loopInThisThread = nullptr;
 
 const int kPoolTimeMs = 10000;
 

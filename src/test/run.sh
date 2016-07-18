@@ -9,21 +9,19 @@ g++-5 -I../network -I../base -I/usr/local/Cellar/boost/1.60.0_1/include \
 	../network/poller/DefaultPoller.cpp \
 	../network/poller/PollPoller.cpp \
 	../network/EventLoopThread.cpp\
-	../network/InetAddress.cpp\
+	../network/Socket.cpp\
 	../base/Timestamp.cpp \
 	../network/Acceptor.cpp\
-	../network/Socket.cpp\
+	../network/InetAddress.cpp\
 	AcceptorAndEventLoopThreadPool.cpp\
 	-g -std=c++11 -o test;
 #./test
 
-#	../network/Socket.cpp\
-#	../network/Channel.cpp \
 
+#ChannelAndPollerTest.cpp \
 #ThreadPoolAndSync.cpp \
 #EventLoopTest.cpp \
 #ThreadAndCondition.cpp \
 #ThreadAndSync.cpp
 #ThreadPoolAndCondition.cpp \
-#ChannelAndPollerTest.cpp \
 

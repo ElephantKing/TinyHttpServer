@@ -50,7 +50,6 @@ int getListenFd(int port) {
 }
 
 void newConnectionCallback(EventLoop* loop, int listenFd) {
-	loop->assertInLoopThread();
 	struct sockaddr_in client_addr;
 	socklen_t length = sizeof(client_addr);
     int connFd = accept(listenFd, (struct sockaddr*)&client_addr, &length);
@@ -144,19 +143,23 @@ int main() {
 	CurrentThread::sleepMsec(2000); //waiting for loop start, should use condition replace sleep
 	loop->runInLoop(std::bind([]() { assert(!CurrentThread::isMainThread()); }));
 	assert(CurrentThread::isMainThread());
+	//loop->assertInLoopThread();
 
 	auto listenFd = getListenFd(kPort);
 	std::function<void(Timestamp)> onNewConnection = std::bind(newConnectionCallback, loop, listenFd);
 
+	//Channel 的所有操作都应该在loopthread，这样就不需要对channel加锁
 	Channel* listenChannel_ptr = new Channel(loop, listenFd);
 	Channel& listenChannel = *listenChannel_ptr;
-	listenChannel.setReadCallback(onNewConnection);
-	listenChannel.enableReading();
+	loop->runInLoop([&](){
+		listenChannel.setReadCallback(onNewConnection);
+		listenChannel.enableReading();
+	});
 	
 	ThreadPool clientThread("clientThread");
 	clientThread.setMaxQueueSize(100);
 	clientThread.start(2);
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 10; ++i) {
 		clientThread.run(connectAndWrite);
 	}
 	
@@ -170,3 +173,4 @@ int main() {
 	clientThread.stop();
 	return 0;
 }
+
