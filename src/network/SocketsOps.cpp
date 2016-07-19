@@ -76,6 +76,8 @@ int createNonblockingOrDie(sa_family_t family) {
 
 void bindOrDie(int sockfd, const struct sockaddr* addr) {
 	int ret = ::bind(sockfd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in)));
+//	fprintf(stderr, "bind ok, addr:%s, port:%d", 
+//				inet_ntoa(((sockaddr_in*)addr)->sin_addr), ((sockaddr_in*)addr)->sin_port);
 	if (ret < 0) {
 		//LOG_SYSFATAL << "sockets::bindOrDie";
 		fprintf(stderr, "bind failed, err: %d, %s, addr:%s, port:%d", 
@@ -147,7 +149,7 @@ void toIpPort(char* buf, size_t size,
 	toIp(buf, size, addr);
 	size_t end = strlen(buf);
 	const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
-	uint16_t port = sockets::networkToHost(addr4->sin_port);
+	uint16_t port = sockets::networkToHost16(addr4->sin_port);
 	assert(size > end);
 	snprintf(buf + end, size - end, ":%u", port);
 }
@@ -170,7 +172,7 @@ void fromIpPort(const char* ip, uint16_t port,
 			    struct sockaddr_in* addr)
 {
 	addr->sin_family = AF_INET;
-	addr->sin_port = hostToNetwork(port);
+	addr->sin_port = hostToNetwork16(port);
 	if (::inet_pton(AF_INET, ip, &addr->sin_addr) <= 0) {
 //		LOG_SYSERR << "sockets::fromIpPort";
 	}
@@ -180,7 +182,7 @@ void fromIpPort(const char* ip, uint16_t port,
                          struct sockaddr_in6* addr)
 {
   addr->sin6_family = AF_INET6;
-  addr->sin6_port = hostToNetwork(port);
+  addr->sin6_port = hostToNetwork16(port);
   if (::inet_pton(AF_INET6, ip, &addr->sin6_addr) <= 0)
   {
     //LOG_SYSERR << "sockets::fromIpPort";

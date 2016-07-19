@@ -25,14 +25,13 @@ InetAddress::InetAddress(uint16_t port, bool loopbackOnly, bool ipv6) {
 		addr6_.sin6_family = AF_INET6;
 		in6_addr ip = loopbackOnly ? in6addr_loopback : in6addr_any;
 		addr6_.sin6_addr = ip;
-		addr6_.sin6_port = sockets::hostToNetwork(port);
+		addr6_.sin6_port = sockets::hostToNetwork16(port);
 	} else {
 		memset(&addr_, 0, sizeof(addr_));
 		addr_.sin_family = AF_INET;
 		in_addr_t ip = loopbackOnly ? kInaddrLoopback : kInaddrAny;
-		addr_.sin_addr.s_addr = sockets::hostToNetwork(ip);
-//		addr_.sin_port = sockets::hostToNetwork(port);
-		addr_.sin_port = htons(port);
+		addr_.sin_addr.s_addr = sockets::hostToNetwork32(ip);
+		addr_.sin_port = sockets::hostToNetwork16(port);
 	}
 }
 
@@ -64,7 +63,7 @@ uint32_t InetAddress::ipNetEndian() const  {
 }
 
 uint16_t InetAddress::toPort() const {
-	return sockets::networkToHost(portNetEndian());
+	return sockets::networkToHost16(portNetEndian());
 }
 
 static thread_local  char t_resolveBuffer[64 * 1024];

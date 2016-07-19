@@ -5,55 +5,23 @@
 #include <cstdlib>
 #include <algorithm>
 #include <type_traits>
+#include <iostream>
 
 namespace {
 
-//按字节反转
 template<typename T>
-typename std::enable_if<std::is_integral<T>::value, T>::type 
-reverse_bytes(T t) {
-	void *startAddr = &t;
-	std::reverse((uint8_t*)startAddr, (uint8_t*)startAddr + sizeof(T));
+T reverseOrder(T t) {
+#if BYTE_ORDER == BIG_ENDIAN
 	return t;
-}
 
-//既不是大端也不是小端，直接退出
-template<bool isBigEndian_, bool isLittleEndian_, typename T>
-struct EndianHelper {
-	static typename std::enable_if<std::is_integral<T>::value, T>::type
-	trans(T) {
-		abort();
-	}
-};
-
-//转换成网络序
-template<typename T>
-struct EndianHelper<false, true, T> {
-	static typename std::enable_if<std::is_integral<T>::value, T>::type
-	trans(T t) {
-		return reverse_bytes(t);
-	}
-};
-
-template<typename T>
-struct EndianHelper<true, false, T> {
-	static typename std::enable_if<std::is_integral<T>::value, T>::type
-	trans(T t) {
-		return t;
-	}
-};
-
-
-#if __BYTE_ORDER == __BIG_ENDIAN
-typedef std::true_type  isBigEndian;
-typedef std::false_type isLittleEndian;
-#elif  __BYTE_ORDER == __LITTLE_ENDIAN
-typedef std::false_type isBigEndian;
-typedef std::true_type isLittleEndian;
+#elif BYTE_ORDER == LITTLE_ENDIAN
+	unsigned char * byte_ptr = reinterpret_cast<unsigned char *>(&t);
+	std::reverse(byte_ptr, byte_ptr + sizeof(t));
+	return t;
 #else
-#error "Endian not defined"
+#error "byte order error, in Endian.h"
 #endif
-
+}
 
 }
 
@@ -61,21 +29,19 @@ namespace tiny {
 
 namespace sockets {
 
-template<typename T>
-typename std::enable_if<std::is_integral<T>::value, T>::type
-hostToNetwork(T t) {
-	return EndianHelper<isBigEndian::value, isLittleEndian::value, T>::trans(t);
-}
+int16_t hostToNetwork16(int16_t val);
 
+int32_t hostToNetwork32(int32_t val);
 
-template<typename T>
-typename std::enable_if<std::is_integral<T>::value, T>::type
-networkToHost(T t) {
-	return EndianHelper<isLittleEndian::value, isBigEndian::value, T>::trans(t);
-}
+int64_t hostToNetwork64(int64_t val);
+
+int16_t networkToHost16(int16_t val);
+
+int32_t networkToHost32(int32_t val);
+
+int64_t networkToHost64(int64_t val);
 
 }// namespace sockets
-
 
 }// namespace tiny
 #endif
