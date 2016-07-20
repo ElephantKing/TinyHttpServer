@@ -10,9 +10,6 @@
 #include <boost/any.hpp>
 #include <atomic>
 
-
-struct tcp_info;
-
 namespace tiny {
 
 class Channel;
@@ -35,8 +32,6 @@ public:
 	const InetAddress& peerAddress() const { return peerAddr_; }
 	bool connected() const { return state_ == kConnected; }
 	bool disconnected() const { return state_ == kDisconnected; }
-	bool getTcpInfo(struct tcp_info*) const;
-	string getTcpInfoString() const;
 
 	void send(string&& message);
 	void send(const void* message, int len);
