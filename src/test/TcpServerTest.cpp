@@ -20,9 +20,6 @@ using namespace std;
 namespace {
 int16_t listenPort = 9527;
 
-map<int, Channel*> channelMap;
-map<int, Socket*> sockMap;
-
 void onMessage(const TcpConnectionPtr& conn, tiny::Buffer* buff, Timestamp) {
 	string msg = buff->retrieveAllAsString();
 	cout << "Echo Server: Received: " << msg.size() << "bytes from [" << conn->peerAddress().toIp()
@@ -38,8 +35,12 @@ void onConnection(const TcpConnectionPtr& conn) {
 
 void sendToServer(int fd) {
 	for (int i = 0; i < 10; ++i) {
+	cout << "send start" << endl;
 		char buff[] = "hello, server!\n";
-		::write(fd, buff, sizeof(buff));
+		int n = ::write(fd, buff, sizeof(buff));
+		if (n <= 0) {
+			cout << "write err:" << errno << " ," << strerror(errno) << endl;
+		}
 		CurrentThread::sleepMsec(1000);
 	}
 }
@@ -49,10 +50,14 @@ void sendToServer(int fd) {
 int main() {
 	EventLoopThread loopThread([](EventLoop*){ assert(!CurrentThread::isMainThread()); }, "LoopThread");
 	EventLoop *loop = loopThread.startLoop();
-	TcpServer echoServer(loop, InetAddress(listenPort), "echoServer", TcpServer::kNoReusePort);
+	TcpServer* server_ptr = new TcpServer(loop, InetAddress(listenPort), "echoServer", TcpServer::kNoReusePort);
+	TcpServer& echoServer = *server_ptr;
 	echoServer.setThreadNum(0);
 	echoServer.setMessageCallback(std::bind(onMessage, _1, _2, _3));
 	echoServer.setConnectionCallback(std::bind(onConnection, _1));
+	loop->runInLoop([&](){
+		echoServer.start();
+	});
 
 	InetAddress serverAddr("127.0.0.1", listenPort);
 	Socket clientSock(sockets::createNonblockingOrDie(serverAddr.family()));
@@ -66,16 +71,21 @@ int main() {
 	loop->runInLoop([&](){
 		channel_ptr->enableReading();
 	});
-	channel_ptr->enableReading();
 
+	cout << "waiting server ready" << endl;
+	CurrentThread::sleepMsec(2 * 1000);
 	Thread clientThread(std::bind(sendToServer, clientSock.fd()));
 	clientThread.start();
+	clientThread.join();
 
-	cout << "waiting to exit...." << endl;
-	CurrentThread::sleepMsec(30 * 1000);
+	cout << "waiting receive compelete.." << endl;
+	CurrentThread::sleepMsec(1000);
 	loop->runInLoop([=](){
+		channel_ptr->disableAll();
+		channel_ptr->remove();
 		delete channel_ptr;
+		delete server_ptr;
+		loop->quit();
 	});
 	return 0;
-	
 }

@@ -1,5 +1,5 @@
 #include "TcpServer.h"
-#include "Acceptor.cpp"
+#include "Acceptor.h"
 #include "EventLoop.h"
 #include "EventLoopThreadPool.h"
 #include "SocketsOps.h"
@@ -80,6 +80,8 @@ void TcpServer::newConnection(int sockfd, const  InetAddress& peerAddr) {
 	conn->setMessageCallback(messageCallback_);
 	conn->setWriteCompleteCallback(writeCompleteCallback_);
 	conn->setCloseCallback( //FIXME unsafe
+			std::bind(&TcpServer::removeConnection, this, _1));
+	ioLoop->runInLoop(
 			std::bind(&TcpConnection::connectEstablished, conn));
 }
 

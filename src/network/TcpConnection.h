@@ -33,11 +33,11 @@ public:
 	bool connected() const { return state_ == kConnected; }
 	bool disconnected() const { return state_ == kDisconnected; }
 
-	void send(string&& message);
+//	void send(string&& message);
 	void send(const void* message, int len);
 	void send(const StringPiece& message);
 	void send(Buffer* message);
-	void send(Buffer&& message);
+	//void send(Buffer&& message);
 	void shutdown();
 	void forceClose();
 	void forceCloseWithDelay(double seconds);
@@ -96,7 +96,7 @@ private:
 	void handleWrite();
 	void handleClose();
 	void handleError();
-	void sendInLoop(string&& message);
+//	void sendInLoop(string&& message);
 	void sendInLoop(const StringPiece& message);
 	void sendInLoop(const void* message, size_t len);
 	void shutdownInLoop();

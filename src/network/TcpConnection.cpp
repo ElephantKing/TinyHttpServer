@@ -102,10 +102,11 @@ void TcpConnection::sendInLoop(const void* data, size_t len) {
 //		LOG_WARN < "disconnected, give up writing";
 		return;
 	}
+	//没有writeCallback
 	if (!channel_->isWriting() && outputBuffer_.readableBytes() == 0) {
 		nwrote = sockets::write(channel_->fd(), data, len);
 		if (nwrote >= 0) {
-			remaining = len = nwrote;
+			remaining = len - nwrote;
 			if (remaining == 0 && writeCompleteCallback_) {
 				loop_->queueInLoop(
 						std::bind(
@@ -114,13 +115,13 @@ void TcpConnection::sendInLoop(const void* data, size_t len) {
 							}
 				));
 			}
-		}
-	} else {
-		nwrote = 0;
-		if (errno != EWOULDBLOCK) {
-//			LOG_SYSER << "TcpConnection::sendInLoop";
-			if (errno == EPIPE || errno == ECONNRESET) {
-				faultError = true;
+		} else {
+			nwrote = 0;
+			if (errno != EWOULDBLOCK) {
+//				LOG_SYSER << "TcpConnection::sendInLoop";
+				if (errno == EPIPE || errno == ECONNRESET) {
+					faultError = true;
+				}
 			}
 		}
 	}
@@ -177,14 +178,14 @@ void TcpConnection::forceClose() {
 	}
 }
 
-void TcpConnection::forceCloseWithDelay(double seconds) {
+void TcpConnection::forceCloseWithDelay(double /*seconds*/) {
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		setState(kDisconnecting);
-		loop_->runAfter(
-			seconds,
-			makeWeakCallback(shared_from_this(),
-							 &TcpConnection::forceClose)
-		);
+//		loop_->runAfter(
+//			seconds,
+//			makeWeakCallback(shared_from_this(),
+//							 &TcpConnection::forceClose)
+//		);
 	}
 }
 
