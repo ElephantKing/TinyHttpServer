@@ -50,8 +50,10 @@ EventLoop::EventLoop()
 	  threadId_(CurrentThread::tid()),
 	  poller_(Poller::newDefaultPoller(this)),
 	  timerQueue_(new TimerQueue(this)),
+	  wakeupChannel_(nullptr),
 	  currentActiveChannel_(NULL) 
 {
+	//array can not assign.., init it in function body
 	createEventfd(wakeupFd_);
 	wakeupChannel_.reset(new Channel(this, wakeupFd_[0]));
 	//LOG_DEBUG << "EventLoop created " << this << "in thread " << theradId_; 		  
