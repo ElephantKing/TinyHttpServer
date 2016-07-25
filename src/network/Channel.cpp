@@ -69,7 +69,9 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
 		if (logHup_) {
 			//LOG_WARN << "fd = " << fd_ << " Channel::handle_event() POLLHUP";
 		}
-		if (closeCallback_) closeCallback_();
+		if (closeCallback_) {
+			closeCallback_();
+		}
 	}
 
 	if (revents_ & POLLNVAL) {
@@ -77,11 +79,15 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
 	}
 
 	if (revents_ & (POLLERR | POLLNVAL)) {
-		if (errorCallback_) errorCallback_();
+		if (errorCallback_) {
+			errorCallback_();
+		}
 	}
 
 	if (revents_ & (POLLIN | POLLPRI) ) {
-		if (readCallback_) readCallback_(receiveTime);
+		if (readCallback_) {
+			readCallback_(receiveTime);
+		}
 	}
 
 	if (revents_ & POLLOUT) {

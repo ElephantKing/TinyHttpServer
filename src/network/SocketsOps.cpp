@@ -10,22 +10,6 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-namespace {
-typedef struct sockaddr SA;
-
-void setNonBlockAndCloseOnExec(int sockfd) {
-	int flags = ::fcntl(sockfd, F_GETFL, 0);
-	flags |= O_NONBLOCK;
-	int ret = ::fcntl(sockfd, F_SETFL, flags);
-
-	flags = ::fcntl(sockfd, F_GETFD, 0);
-	flags |= FD_CLOEXEC;
-	ret = ::fcntl(sockfd, F_SETFD, flags);
-	(void)ret;
-}
-
-}//unnamed namespace
-
 namespace tiny {
 
 namespace sockets {
@@ -73,6 +57,20 @@ int createNonblockingOrDie(sa_family_t family) {
 	assert(sockfd >= 0);
 #endif
 	return sockfd;
+}
+
+void setNonBlockAndCloseOnExec(int sockfd) {
+	int flags = ::fcntl(sockfd, F_GETFL, 0);
+	assert(flags >= 0);
+	flags |= O_NONBLOCK;
+	int ret = ::fcntl(sockfd, F_SETFL, flags);
+	assert(ret == 0);
+	flags = ::fcntl(sockfd, F_GETFD, 0);
+	assert(flags >= 0);
+	flags |= FD_CLOEXEC;
+	ret = ::fcntl(sockfd, F_SETFD, flags);
+	assert(ret == 0);
+	(void)ret;
 }
 
 void bindOrDie(int sockfd, const struct sockaddr* addr) {

@@ -79,7 +79,7 @@ int main() {
 	clientThread.join();
 
 	cout << "waiting receive compelete.." << endl;
-	CurrentThread::sleepMsec(1000);
+	CurrentThread::sleepMsec(1 * 1000);
 	loop->runInLoop([=](){
 		channel_ptr->disableAll();
 		channel_ptr->remove();

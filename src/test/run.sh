@@ -23,10 +23,10 @@ g++-5 -I../network -I../base -I/usr/local/Cellar/boost/1.60.0_1/include \
 #./test
 
 
+#EventLoopTest.cpp \
 #AcceptorAndEventLoopThreadPool.cpp\
 #ChannelAndPollerTest.cpp \
 #ThreadPoolAndSync.cpp \
-#EventLoopTest.cpp \
 #ThreadAndCondition.cpp \
 #ThreadAndSync.cpp
 #ThreadPoolAndCondition.cpp \

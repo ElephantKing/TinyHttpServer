@@ -8,8 +8,8 @@
 #include "SocketsOps.h"
 
 #include <functional>
+#include <fcntl.h>
 #include <signal.h>
-//#include <sys/event.h>
 
 namespace {
 
@@ -17,14 +17,12 @@ thread_local tiny::EventLoop* t_loopInThisThread = nullptr;
 
 const int kPoolTimeMs = 10000;
 
-int createEventfd() {
-//	int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-//	if (evtfd < 0) {
-//		//LOG_SYSERR << "Failed in eventfd";
-//		abort();
-//	}
-//	return evtfd;
-	return 0;
+void createEventfd(int *wakeup) {
+	if(pipe(wakeup)) {
+		abort();
+	}
+	tiny::sockets::setNonBlockAndCloseOnExec(wakeup[0]);
+	tiny::sockets::setNonBlockAndCloseOnExec(wakeup[1]);
 }
 
 class IgnoreSigPipe {
@@ -52,10 +50,10 @@ EventLoop::EventLoop()
 	  threadId_(CurrentThread::tid()),
 	  poller_(Poller::newDefaultPoller(this)),
 	  timerQueue_(new TimerQueue(this)),
-	  wakeupFd_(createEventfd()),
-	  wakeupChannel_(new Channel(this, wakeupFd_)),
 	  currentActiveChannel_(NULL) 
 {
+	createEventfd(wakeupFd_);
+	wakeupChannel_.reset(new Channel(this, wakeupFd_[0]));
 	//LOG_DEBUG << "EventLoop created " << this << "in thread " << theradId_; 		  
 	if (t_loopInThisThread) {
 //		LOG_FATAL << "Another EventLoop " << t_loopInThisThread
@@ -72,7 +70,8 @@ EventLoop::~EventLoop() {
 	//          << " destructs in thread " << CurrentThread::tid();
 	wakeupChannel_->disableAll();
 	wakeupChannel_->remove();
-	::close(wakeupFd_);
+	::close(wakeupFd_[0]);
+	::close(wakeupFd_[1]);
 	t_loopInThisThread = NULL;
 }
 
@@ -190,7 +189,7 @@ void EventLoop::abortNotInLoopThread() {
 
 void EventLoop::wakeup() {
 	uint64_t one = 1;	
-	ssize_t n = sockets::write(wakeupFd_, &one, sizeof(one));
+	ssize_t n = sockets::write(wakeupFd_[1], &one, sizeof(one));
 	if (n != sizeof(one)) {
 //		LOG_ERROR << "EventLoop::wakeup() writes " << n << "bytes instead of 8";
 	}
@@ -198,7 +197,7 @@ void EventLoop::wakeup() {
 
 void EventLoop::handleRead() {
 	uint64_t one = 1;
-	ssize_t n = sockets::read(wakeupFd_, &one, sizeof(one));
+	ssize_t n = sockets::read(wakeupFd_[0], &one, sizeof(one));
 	if (n != sizeof (one)) {
 //		LOG_ERROR << "EventLoop::handleRead () reads " << n << " bytes instead of 8";
 	}

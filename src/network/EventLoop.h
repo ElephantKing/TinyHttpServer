@@ -98,7 +98,7 @@ private:
 	Timestamp poolReturnTime_;
 	std::unique_ptr<Poller> poller_;
 	std::unique_ptr<TimerQueue> timerQueue_;
-	int wakeupFd_;
+	int wakeupFd_[2];
 
 	std::unique_ptr<Channel> wakeupChannel_;
 	boost::any context_;
